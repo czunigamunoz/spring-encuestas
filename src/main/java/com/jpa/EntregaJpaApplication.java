@@ -2,6 +2,8 @@ package com.jpa;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import org.springframework.web.filter.HiddenHttpMethodFilter;
 
 /**
  * Main class for the Entrega JPA application.
@@ -17,6 +19,11 @@ public class EntregaJpaApplication {
 	 */
 	public static void main(String[] args) {
 		SpringApplication.run(EntregaJpaApplication.class, args);
+	}
+
+	@Bean
+	public HiddenHttpMethodFilter hiddenHttpMethodFilter() {
+		return new HiddenHttpMethodFilter();
 	}
 
 }

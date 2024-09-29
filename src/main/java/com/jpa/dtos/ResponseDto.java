@@ -8,4 +8,7 @@ package com.jpa.dtos;
  * @return a ResponseEntity containing the created ResponseDto or a not found status if the response does not exist
  */
 public record ResponseDto(String idRespuesta, String respuesta) {
+    public ResponseDto() {
+        this(null, null);
+    }
 }

@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 /**
  * REST controller for managing responses.
  */
@@ -26,5 +28,16 @@ public class QuestionController {
     @PostMapping("/{idQuestion}")
     public ResponseEntity<ResponseDto> createQuestionResponse(@PathVariable String idQuestion, @RequestBody ResponseDto response) {
         return questionService.createQuestionResponse(idQuestion, response);
+    }
+
+    /**
+     * Retrieves all responses for a question.
+     *
+     * @param id the ID of the question to retrieve responses for
+     * @return a ResponseEntity containing a list of ResponseDto objects
+     */
+    @GetMapping("/{id}/respuestas")
+    public ResponseEntity<List<ResponseDto>> getResponsesByQuestion(@PathVariable String id) {
+        return questionService.getResponsesByQuestion(id);
     }
 }

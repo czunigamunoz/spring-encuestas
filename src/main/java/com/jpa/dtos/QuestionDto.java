@@ -10,4 +10,7 @@ import java.util.List;
  * @return a ResponseEntity containing the created ResponseDto or a not found status if the question does not exist
  */
 public record QuestionDto(String idPregunta, String pregunta, List<ResponseDto> respuestas) {
+    public QuestionDto() {
+        this(null, null, null);
+    }
 }

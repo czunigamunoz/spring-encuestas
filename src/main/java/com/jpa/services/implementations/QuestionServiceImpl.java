@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -48,5 +49,17 @@ public class QuestionServiceImpl implements IQuestionService {
                 responseSaved.getAnswerText()
         );
         return ResponseEntity.of(Optional.of(responseDto));
+    }
+
+    @Override
+    public ResponseEntity<List<ResponseDto>> getResponsesByQuestion(String id) {
+        List<ResponseDto> responses = responseRepository.findByQuestionId(id)
+                .stream()
+                .map(response -> new ResponseDto(response.getId(), response.getAnswerText()))
+                .toList();
+        if (responses.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(responses);
     }
 }

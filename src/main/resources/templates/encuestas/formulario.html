@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity6" lang="es">
+<head>
+    <title th:text="${encuesta.idEncuesta} ? 'Editar Encuesta' : 'Nueva Encuesta'"></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-5">
+    <h1 th:if="${encuesta.idEncuesta != null}" th:text="'Editar Encuesta'">Editar Encuesta</h1>
+    <h1 th:if="${encuesta.idEncuesta == null}" th:text="'Nueva Encuesta'">Nueva Encuesta</h1>
+    <form id="surveyForm" th:object="${encuesta}" th:action="${encuesta.idEncuesta} ? @{/encuestas/editar/{idEncuesta}(idEncuesta=${encuesta.idEncuesta})} : @{/encuestas/nuevo}" method="post">
+        <div th:if="${encuesta.idEncuesta != null}" class="mb-3">
+            <label for="idEncuesta" class="form-label">ID</label>
+            <input type="text" class="form-control" id="idEncuesta" th:field="*{idEncuesta}" th:value="${encuesta.idEncuesta}" disabled>
+        </div>
+        <div class="mb-3">
+            <label for="titulo" class="form-label">Titulo</label>
+            <input type="text" class="form-control" id="titulo" th:field="*{titulo}" th:value="${encuesta.idEncuesta != null} ? ${encuesta.titulo} : ''" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <a href="/encuestas" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+</body>
+</html>
+
+<script>
+    document.getElementById('surveyForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent the default form submission
+
+        const titulo = document.getElementById('titulo')?.value;
+        const idEncuesta = document.getElementById('idEncuesta')?.value;
+        const data = idEncuesta ? {idEncuesta: idEncuesta, titulo: titulo} : { titulo: titulo };
+        const isEdit = window.location.pathname.includes('editar');
+        const url = isEdit ? `/api/encuestas/${idEncuesta}` : "/api/encuestas";
+        const method = isEdit ? "PUT" : "POST";
+
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+            window.location.href = '/encuestas'; // Redirect after successful submission
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+    });
+</script>
+
+</body>
+</html>

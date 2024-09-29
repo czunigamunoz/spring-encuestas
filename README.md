@@ -8,6 +8,30 @@ This is a Spring Boot application for managing api/surveys, questions, and respo
 
 ![ObtenerEncuestas](src/main/resources/static/obtenerEncuestas.png)
 
+![SpringSecurity](src/main/resources/static/springSecurity1.png)
+
+![SpringSecurity](src/main/resources/static/springSecurity2.png)
+
+![SpringSecurity](src/main/resources/static/springSecurity3.png)
+
+![WebEncuestas](src/main/resources/static/webEncuestas1.png)
+
+![WebEncuestas](src/main/resources/static/webEncuestas2.png)
+
+![WebEncuestas](src/main/resources/static/webEncuestas3.png)
+
+![WebEncuestas](src/main/resources/static/webEncuestas4.png)
+
+![WebEncuestas](src/main/resources/static/webEncuestas5.png)
+
+![WebEncuestas](src/main/resources/static/webEncuestas6.png)
+
+![WebEncuestas](src/main/resources/static/webEncuestas7.png)
+
+![WebEncuestas](src/main/resources/static/webEncuestas8.png)
+
+![WebEncuestas](src/main/resources/static/webEncuestas9.png)
+
 ## Table of Contents
 - [Getting Started](#getting-started)
 - [Prerequisites](#prerequisites)

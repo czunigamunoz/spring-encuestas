@@ -6,6 +6,7 @@ import com.jpa.dtos.SurveyDto;
 import com.jpa.models.Question;
 import com.jpa.models.Response;
 import com.jpa.models.Survey;
+import com.jpa.repositories.QuestionRepository;
 import com.jpa.repositories.SurveyRepository;
 import com.jpa.services.ISurveyService;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ import java.util.UUID;
 public class SurveyServiceImpl implements ISurveyService {
 
     private final SurveyRepository surveyRepository;
+    private final QuestionRepository questionRepository;
 
     /**
      * Creates a new survey.
@@ -43,30 +45,46 @@ public class SurveyServiceImpl implements ISurveyService {
         surveyIn.setId(UUID.randomUUID().toString());
         surveyIn.setTitle(survey.titulo());
 
-        List<Question> questions = survey.preguntas().stream()
-                .map(question -> {
-                    Question questionToSave = new Question();
-                    questionToSave.setId(UUID.randomUUID().toString());
-                    questionToSave.setSurvey(surveyIn);
-                    questionToSave.setQuestionText(question.pregunta());
-                    questionToSave.setResponses(new ArrayList<>());
-                    return questionToSave;
-                }).toList();
+        if (survey.preguntas() == null) {
+            surveyIn.setQuestions(new ArrayList<>());
+        }else {
+            List<Question> questions = survey.preguntas().stream()
+                    .map(question -> {
+                        Question questionToSave = new Question();
+                        questionToSave.setId(UUID.randomUUID().toString());
+                        questionToSave.setSurvey(surveyIn);
+                        questionToSave.setQuestionText(question.pregunta());
+                        questionToSave.setResponses(new ArrayList<>());
+                        return questionToSave;
+                    }).toList();
 
-        surveyIn.setQuestions(questions);
+            surveyIn.setQuestions(questions);
+            Survey surveySaved = surveyRepository.save(surveyIn);
+
+            List<QuestionDto> questionsDto = questions.stream()
+                    .map(question -> new QuestionDto(
+                            question.getId(),
+                            question.getQuestionText(),
+                            new ArrayList<>()))
+                    .toList();
+        }
+
         Survey surveySaved = surveyRepository.save(surveyIn);
-
-        List<QuestionDto> questionsDto = questions.stream()
-                .map(question -> new QuestionDto(
-                        question.getId(),
-                        question.getQuestionText(),
-                        new ArrayList<>()))
-                .toList();
-
         SurveyDto surveyDto = new SurveyDto(
                 surveySaved.getId(),
                 surveySaved.getTitle(),
-                questionsDto);
+                surveySaved.getQuestions().stream()
+                        .map(question -> new QuestionDto(
+                                question.getId(),
+                                question.getQuestionText(),
+                                question.getResponses()
+                                        .stream()
+                                        .map(response -> new ResponseDto(
+                                                response.getId(),
+                                                response.getAnswerText()
+                                        )).collect(java.util.stream.Collectors.toList())
+                        )).toList()
+        );
 
         return ResponseEntity.ok(surveyDto);
     }
@@ -102,6 +120,89 @@ public class SurveyServiceImpl implements ISurveyService {
     }
 
     /**
+     * Retrieves a survey by its ID.
+     *
+     * @param id the ID of the survey to retrieve
+     * @return a ResponseEntity containing the SurveyDto or a not found status if the survey does not exist
+     */
+    @Override
+    public  ResponseEntity<SurveyDto> getById(String id) {
+        Optional<Survey> survey = surveyRepository.findById(id);
+        if (survey.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        Survey surveyFound = survey.get();
+        List<QuestionDto> questionsDto = surveyFound.getQuestions().stream()
+                .map(question -> new QuestionDto(
+                        question.getId(),
+                        question.getQuestionText(),
+                        question.getResponses()
+                                .stream()
+                                .map(response -> new ResponseDto(
+                                        response.getId(),
+                                        response.getAnswerText()
+                                )).collect(java.util.stream.Collectors.toList())
+                )).toList();
+        SurveyDto surveyDto = new SurveyDto(
+                surveyFound.getId(),
+                surveyFound.getTitle(),
+                questionsDto
+        );
+        return ResponseEntity.ok(surveyDto);
+    }
+
+    @Override
+    public ResponseEntity<List<QuestionDto>> getAllQuestionsBySurveyId(String id) {
+        List<QuestionDto> questions = questionRepository.findBySurveyId(id).stream()
+                .map(question -> new QuestionDto(
+                        question.getId(),
+                        question.getQuestionText(),
+                        question.getResponses()
+                                .stream()
+                                .map(response -> new ResponseDto(
+                                        response.getId(),
+                                        response.getAnswerText()
+                                )).collect(java.util.stream.Collectors.toList())
+                )).toList();
+        return ResponseEntity.ok(questions);
+    }
+
+    @Override
+    public ResponseEntity<SurveyDto> createQuestionForSurvey(String id, QuestionDto question) {
+        Optional<Survey> survey = surveyRepository.findById(id);
+        if (survey.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        Survey surveyFound = survey.get();
+        Question questionToSave = new Question();
+        questionToSave.setId(UUID.randomUUID().toString());
+        questionToSave.setSurvey(surveyFound);
+        questionToSave.setQuestionText(question.pregunta());
+        questionToSave.setResponses(new ArrayList<>());
+        Question questionSaved = questionRepository.save(questionToSave);
+        surveyFound.getQuestions().add(questionSaved);
+        Survey surveyUpdated = surveyRepository.save(surveyFound);
+
+        List<QuestionDto> questionsDto = surveyUpdated.getQuestions().stream()
+                .map(questionDto -> new QuestionDto(
+                        questionDto.getId(),
+                        questionDto.getQuestionText(),
+                        questionDto.getResponses()
+                                .stream()
+                                .map(response -> new ResponseDto(
+                                        response.getId(),
+                                        response.getAnswerText()
+                                )).collect(java.util.stream.Collectors.toList())
+                )).toList();
+        SurveyDto surveyDto = new SurveyDto(
+                surveyUpdated.getId(),
+                surveyUpdated.getTitle(),
+                questionsDto
+        );
+        return ResponseEntity.ok(surveyDto);
+    }
+
+    /**
      * Updates an existing survey.
      *
      * @param id the ID of the survey to update
@@ -124,15 +225,17 @@ public class SurveyServiceImpl implements ISurveyService {
                         Question questionToSave = new Question();
                         questionToSave.setSurvey(surveyToUpdate);
                         questionToSave.setQuestionText(question.pregunta());
-                        questionToSave.setResponses(question.respuestas()
-                                .stream()
-                                .map(response -> {
-                                    Response responseToSave = new Response();
-                                    responseToSave.setId(response.idRespuesta());
-                                    responseToSave.setAnswerText(response.respuesta());
-                                    return responseToSave;
-                                }).toList()
-                        );
+                        if (question.respuestas() != null) {
+                            questionToSave.setResponses(question.respuestas()
+                                    .stream()
+                                    .map(response -> {
+                                        Response responseToSave = new Response();
+                                        responseToSave.setId(response.idRespuesta());
+                                        responseToSave.setAnswerText(response.respuesta());
+                                        return responseToSave;
+                                    }).toList()
+                            );
+                        }
                         return questionToSave;
                     }).toList();
             surveyToUpdate.setQuestions(questions);

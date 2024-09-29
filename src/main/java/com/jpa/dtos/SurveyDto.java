@@ -11,4 +11,7 @@ import java.util.List;
  * @return a ResponseEntity containing the created SurveyDto or a not found status if the survey does not exist
  */
 public record SurveyDto(String idEncuesta, String titulo, List<QuestionDto> preguntas) {
+    public SurveyDto() {
+        this(null, null, null);
+    }
 }
